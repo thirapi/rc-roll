@@ -3,85 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification Required</title>
+    <title>Pretext Green Screen Wrap</title>
+    
+    <!-- Using Google Fonts for the Newspaper look -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
     <style>
-        body {
+        body, html {
             margin: 0;
-            background: #f9f9f9;
-            color: #333;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .captcha-box {
-            background: #fff;
-            border: 1px solid #d3d3d3;
-            border-radius: 3px;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            cursor: pointer;
-            box-shadow: 0 0 4px rgba(0,0,0,0.05);
-            width: 300px;
-        }
-        .checkbox-box {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #c1c1c1;
-            border-radius: 2px;
-            background: #fff;
-            position: relative;
-        }
-        .checkmark {
-            display: none;
-            position: absolute;
-            left: 8px;
-            top: 3px;
-            width: 5px;
-            height: 10px;
-            border: solid #009688;
-            border-width: 0 3px 3px 0;
-            transform: rotate(45deg);
-        }
-        .text {
-            font-size: 14px;
-            flex-grow: 1;
-        }
-        iframe {
-            position: fixed;
-            top: 0;
-            left: 0;
+            padding: 0;
             width: 100%;
             height: 100%;
-            border: none;
-            background: #000;
+            background-color: #0d0d0d;
+            overflow: hidden;
+            font-family: 'Playfair Display', serif;
+            color: #d1d1d1;
         }
+
+        #main-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        #processing-canvas {
+            display: none;
+        }
+        
+        video { display: none; }
+
+        /* Fallback for title since Pretext doesn't handle DOM perfectly, we render it via canvas! */
     </style>
 </head>
 <body>
-    <div class="captcha-box" onclick="verify()">
-        <div class="checkbox-box">
-            <div class="checkmark" id="check"></div>
-        </div>
-        <div class="text">I'm not a robot</div>
-        <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" width="30" height="30" alt="reCAPTCHA">
+    <div id="start-overlay" style="position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 100; display:flex; justify-content:center; align-items:center; flex-direction:column; cursor:pointer;">
+        <h1 style="color:#fff; font-size: 3rem;">Start Experience</h1>
+        <p style="color:#aaa; font-style:italic;">Make sure your volume is up</p>
     </div>
 
-    <script>
-        function verify() {
-            document.getElementById('check').style.display = 'block';
-            setTimeout(() => {
-                document.body.innerHTML = `
-                    <iframe 
-                        src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" 
-                        allow="autoplay; encrypted-media" 
-                        allowfullscreen>
-                    </iframe>
-                `;
-            }, 500);
+    <canvas id="main-canvas"></canvas>
+    <!-- Offscreen canvas for green screen processing -->
+    <canvas id="processing-canvas" width="640" height="360"></canvas>
+
+    <!-- Source Video: Ganti URL ini dengan video Green Screen lokal milikmu -->
+    <video id="video" loop crossorigin="anonymous" playsinline autoplay muted>
+        <source src="Rick_Astley_Green_Screen.mp4" type="video/mp4">
+    </video>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "@chenglou/pretext": "https://esm.sh/@chenglou/pretext@0.0.3"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { prepareWithSegments, layoutNextLine } from '@chenglou/pretext';
+
+        const bio = `Rick Astley, born Richard Paul Astley on February 6, 1966, in Newton-le-Willows, Lancashire, England, is a singer, songwriter, and radio personality who became one of the most iconic figures in pop music history. He grew up in a working-class family and developed a passion for music at an early age. Astley joined a local church choir as a boy, which helped him discover his vocal abilities. At fifteen, he played drums in a local band called Give Way, and later became the lead singer of the soul band FBI. It was during a performance with FBI that he was discovered by legendary record producer Pete Waterman. Waterman recognized his extraordinary baritone voice, which was remarkably deep and soulful for such a young man, and invited him to work at his famous PWL Recording Studios in London.
+
+At first, Astley was hired as a "tape op," essentially making tea and learning the ropes behind the scenes, but Waterman and his partners quickly realized they had a star on their hands. In 1987, his debut single "Never Gonna Give You Up" was released and immediately shot to number one in twenty-five countries, making it one of the best-selling singles of all time. The song, characterized by its catchy synth-pop melody and driving beat, was accompanied by a distinctive music video featuring Astley singing passionately in a long trench coat. He followed up with more hits, including "Together Forever," reaching the top of the Billboard Hot 100 in the United States. His debut album "Whenever You Need Somebody" sold over fifteen million copies worldwide.
+
+In the late 1980s, Astley was arguably one of the most recognizable faces in the music industry. However, feeling exhausted by constant media scrutiny and a lack of creative control over his own image and work, he made the surprising decision to retire from music at the age of just twenty-seven in 1993, retreating to suburban England to focus on raising his daughter. He enjoyed a quiet family life away from the limelight for over a decade.
+
+Then, in 2007, an unforeseen phenomenon known as "Rickrolling" emerged on internet message boards. The bait-and-switch prank involved tricking users into clicking a link that directed them to the music video for "Never Gonna Give You Up." It spread like wildfire across forums, social media, and even mainstream television. Astley had inadvertently become one of the first truly global internet memes. The official music video eventually amassed over one billion views on YouTube.
+
+Astley handled the sudden meme fame with remarkable grace and good humor, which only endeared him further to his newfound internet fanbase. He embraced the absurdity of being a viral sensation. He slowly returned to the music scene, releasing new material that showcased a more mature, soulful sound that reflected his actual musical tastes. His album "50," released in 2016 to celebrate his fiftieth birthday, surprised many by debuting at number one on the UK Albums Chart. 
+
+Today, Rick Astley remains a beloved cultural icon, beloved by multiple generations for entirely different reasons. Whether he's performing at massive festivals, collaborating with rock bands, or simply interacting with fans online, he maintains a humble, self-deprecating presence. His story is a testament to the unpredictable nature of fame and the enduring power of a truly catchy pop song. He has never given up, never let anyone down, and against all odds, proved that there is genuine staying power underneath the internet's greatest meme.`;
+        
+        // Ensure fonts load
+        document.fonts.ready.then(() => {
+            initExperience();
+        });
+
+        function initExperience() {
+            const canvas = document.getElementById('main-canvas');
+            const ctx = canvas.getContext('2d', { alpha: false });
+            
+            const procCanvas = document.getElementById('processing-canvas');
+            const procCtx = procCanvas.getContext('2d', { willReadFrequently: true });
+            
+            const video = document.getElementById('video');
+            const overlay = document.getElementById('start-overlay');
+            
+            overlay.addEventListener('click', () => {
+                video.muted = false;
+                video.currentTime = 0;
+                video.play().catch(e => console.log('Play blocked:', e));
+                overlay.style.transition = "opacity 0.5s";
+                overlay.style.opacity = "0";
+                setTimeout(() => overlay.style.display = "none", 500);
+            });
+            
+            // Try autoplay muted initially
+            video.play().catch(e => console.log('Autoplay muted blocked:', e));
+
+            let width, height;
+            let dpr = window.devicePixelRatio || 1;
+
+            const fontSize = 14;
+            const lineHeight = 18; // Dense newspaper style
+            const fontString = `400 ${fontSize}px 'Playfair Display'`;
+            
+            // Layout prepared exactly once
+            const fullBio = bio + "\n\n" + bio; // Ensure enough text
+            const prepared = prepareWithSegments(fullBio, fontString);
+            
+            // ASCII map for Rick's inner body
+            const asciiChars = [' ', '.', ',', '-', '=', '+', '*', '%', '#', '@'];
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+                ctx.scale(dpr, dpr);
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            window.addEventListener('keydown', (event) => {
+                if (event.code === 'Space') {
+                    event.preventDefault();
+
+                    if (video.paused) {
+                        video.play();
+                    } else {
+                        video.pause();
+                    }
+                }
+            })
+
+            function isGreenScale(r, g, b) {
+                // simple chroma key condition: green must be significantly higher than red and blue
+                return g > r + 20 && g > b + 20 && g > 60;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                if (video.paused || video.ended || video.videoWidth === 0) {
+                    return; // Mencegah layar terhapus saat di-pause!
+                }
+                
+                // Clear Background
+                ctx.fillStyle = '#0f0f0f';
+                ctx.fillRect(0, 0, width, height);
+
+                // Title
+                ctx.font = `900 48px 'Playfair Display'`;
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText("NEVER GONNA GIVE YOU UP", 40, 60);
+                
+                ctx.font = `italic 400 14px 'Playfair Display'`;
+                ctx.fillStyle = '#888';
+                ctx.fillText("By Rick Astley — February 6, 1966", 40, 90);
+
+                // We start text layout below the header
+                const startYText = 140;
+                    
+                    // Render video to processing canvas to read pixels
+                    procCanvas.width = 300; // Small resolution for fast processing
+                    const aspect = video.videoHeight / video.videoWidth;
+                    procCanvas.height = Math.floor(procCanvas.width * aspect);
+                    procCtx.drawImage(video, 0, 0, procCanvas.width, procCanvas.height);
+                    
+                    const frameData = procCtx.getImageData(0, 0, procCanvas.width, procCanvas.height);
+                    const pixels = frameData.data;
+
+                    for(let i=0; i<pixels.length; i+=4) {
+                         if(isGreenScale(pixels[i], pixels[i+1], pixels[i+2])) {
+                             pixels[i+3] = 0; // Transparent
+                         }
+                    }
+                    procCtx.putImageData(frameData, 0, 0);
+
+                    // Figure out where the video "window" is on our screen
+                    // We want rick astley to be huge, occupying 105% of height anchored to the bottom
+                    const drawHeight = height * 1.05;
+                    const drawWidth = drawHeight / aspect;
+                    const drawXOffset = (width - drawWidth) / 2;
+                    const drawYOffset = height - drawHeight + 50;
+
+                    // Draw colored non-green video directly!
+                    ctx.drawImage(procCanvas, drawXOffset, drawYOffset, drawWidth, drawHeight);
+
+                    let cursor = { segmentIndex: 0, graphemeIndex: 0 };
+                    
+                    // Draw loop for each line
+                    const numLines = Math.floor((height - startYText) / lineHeight);
+                    
+                    for (let i = 0; i < numLines; i++) {
+                        const globalY = startYText + (i * lineHeight);
+                        
+                        // Map globalY into video processing space
+                        const relativeY = globalY - drawYOffset;
+                        
+                        let minVideoX = -1;
+                        let maxVideoX = -1;
+
+                        if (relativeY >= 0 && relativeY < drawHeight) {
+                            // Find corresponding y in procCanvas
+                            const procY = Math.floor((relativeY / drawHeight) * procCanvas.height);
+                            const rowStart = procY * procCanvas.width * 4;
+                            
+                            // Scan row for non-transparent pixels (silhouette bounding)
+                            for(let px = 0; px < procCanvas.width; px++){
+                                const alpha = pixels[rowStart + px * 4 + 3];
+                                
+                                if(alpha !== 0) {
+                                    if(minVideoX === -1) minVideoX = px;
+                                    maxVideoX = px;
+                                }
+                            }
+                        }
+
+                        // Map bounding box back to screen space and create Obstacles
+                        let obstacleMinX = -1;
+                        let obstacleMaxX = -1;
+                        const margin = 20;
+
+                        if(minVideoX !== -1) {
+                            obstacleMinX = Math.round(drawXOffset + (minVideoX / procCanvas.width) * drawWidth) - margin;
+                            obstacleMaxX = Math.round(drawXOffset + (maxVideoX / procCanvas.width) * drawWidth) + margin;
+
+                        }
+
+                        // -- Main Text Wrapper (Pretext) --
+                        ctx.font = fontString;
+                        ctx.fillStyle = '#ccc';
+                        // Using a padding from the edges
+                        const paddingEdge = 40;
+
+                        let wrapLines = (c, w, dx) => {
+                            if(w < 50) return c;
+                            const result = layoutNextLine(prepared, c, w);
+                            if(result && result.text) {
+                                ctx.fillText(result.text, dx, globalY);
+                                return result.end;
+                            }
+                            return c;
+                        };
+
+                        if(obstacleMinX === -1) {
+                            // No obstacle, draw full line
+                            let originalLength = cursor.segmentIndex;
+                            cursor = wrapLines(cursor, width - paddingEdge * 2, paddingEdge);
+                            // Force advance if stuck
+                            if(originalLength === cursor.segmentIndex) cursor.segmentIndex++;
+                        } else {
+                            // Obstacle! Draw left slot then right slot
+                            let leftSlotWidth = obstacleMinX - paddingEdge;
+                            if(leftSlotWidth > 50) {
+                                cursor = wrapLines(cursor, leftSlotWidth, paddingEdge);
+                            }
+
+                            let rightSlotStartX = obstacleMaxX;
+                            let rightSlotWidth = width - paddingEdge - rightSlotStartX;
+                            if(rightSlotWidth > 50) {
+                                cursor = wrapLines(cursor, rightSlotWidth, rightSlotStartX);
+                            } else {
+                                // Right slot too narrow, force advance to not get stuck 
+                                // wait, we only force advance if both are stuck
+                                if(leftSlotWidth <= 50) cursor.segmentIndex++;
+                            }
+                        }
+
+                        // Loop text infinitely
+                        if(cursor.segmentIndex >= prepared.segments.length - 5) {
+                            cursor = { segmentIndex: 0, graphemeIndex: 0 };
+                        }
+                    }
+            }
+
+            animate();
         }
     </script>
 </body>
